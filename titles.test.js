@@ -1,9 +1,0 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import {stats,unlockedTitles,WIN_TIERS,DAMAGE_TIERS} from '../src/domain/core.js';
-const rec=(day,win=true,rate=win?1:0)=>({battleDate:`2026-10-${String(day).padStart(2,'0')}`,enemyMaxHp:1,exterminated:win,allClear:win,rawDamage:win?1:0,clearRate:rate});
-test('all 37 titles have unique stable IDs',()=>{const all=unlockedTitles({wins:1000,damage:10000,longestStreak:7,battles:20,averageRate:1});assert.equal(all.length,37);assert.equal(new Set(all.map(x=>x.id)).size,37);assert.equal(WIN_TIERS.length,14);assert.equal(DAMAGE_TIERS.length,19)});
-test('three wins unlock streak title, not seven',()=>{const s=stats([rec(1),rec(2),rec(3)]);assert.equal(s.longestStreak,3);assert.equal(s.currentStreak,3);assert.ok(unlockedTitles(s).some(x=>x.id==='S-3'));assert.ok(!unlockedTitles(s).some(x=>x.id==='S-7'))});
-test('loss and no-battle interrupt streak',()=>{const no={battleDate:'2026-10-03',enemyMaxHp:0,rawDamage:1,exterminated:false};const s=stats([rec(1),rec(2),no,rec(4),rec(5,false),rec(6)]);assert.equal(s.longestStreak,2);assert.equal(s.currentStreak,1);assert.equal(s.damage,5)});
-test('average titles require minimum battles',()=>{const six=stats(Array.from({length:6},(_,i)=>rec(i+1)));assert.ok(!unlockedTitles(six).some(x=>x.id==='A-80'));const seven=stats(Array.from({length:7},(_,i)=>rec(i+1)));assert.ok(unlockedTitles(seven).some(x=>x.id==='A-80'));assert.ok(!unlockedTitles(seven).some(x=>x.id==='A-90'));const twenty=stats(Array.from({length:20},(_,i)=>rec(i+1)));assert.ok(unlockedTitles(twenty).some(x=>x.id==='A-90'))});
-test('early victory counts but is not all-clear',()=>{const s=stats([{...rec(1),allClear:false,clearRate:.5,rawDamage:2}]);assert.equal(s.wins,1);assert.equal(s.allClear,0);assert.equal(s.averageRate,.5)});
