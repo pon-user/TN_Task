@@ -1,4 +1,4 @@
-import {addDays,dateKey} from './core.js';
+import {addDays,dateKey,logicalDateKey} from './core.js';
 export const occurrenceId=(rule,date=rule.currentOccurrenceDate)=>`repeat:${rule.id}@${date}`;
 export const localDay=(key)=>{const [y,m,d]=key.split('-').map(Number);return new Date(y,m-1,d);};
 export function nextOccurrence(rule,after){
@@ -102,12 +102,12 @@ function basePaidFor(state,key,sourceId){
 export function finishOccurrence(state,id,now=new Date(),skip=false,occurrenceDate=null){
   const rule=(state.recurrenceRules||[]).find(r=>r.id===id&&!r.isDeleted);
   if(!rule)throw Error('繰り返しが見つかりません');
-  const key=dateKey(now);
+  const key=logicalDateKey(now);
   const pending=pendingOccurrences(state,key).filter(r=>r.id===id);
   const selected=occurrenceDate?pending.find(r=>r.occurrenceDate===occurrenceDate):pending[0];
   if(!selected)throw Error('この回は未完了ではありません');
   const sourceId=selected.sourceId,stamp=now.toISOString();
-  const event={sourceId,ruleId:id,occurrenceDate:selected.occurrenceDate,eventType:skip?'skipped':'completed',occurredAt:stamp,reverted:false};
+  const event={sourceId,ruleId:id,occurrenceDate:selected.occurrenceDate,eventType:skip?'skipped':'completed',occurredAt:stamp,recordedDay:key,reverted:false};
   const previous=state.xpEvents.find(e=>e.sourceId===sourceId);
   let xpEvents=state.xpEvents;
   if(!skip&&!previous){

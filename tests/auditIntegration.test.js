@@ -32,8 +32,8 @@ test('undated completion remains auxiliary/advance attack as specified in Obsidi
 });
 
 test('timestamp display is local and supports cross-midnight without slicing UTC date',()=>{
- const stamp='2026-10-22T15:30:00.000Z';
- assert.equal(localRecordDate(stamp),dateKey(new Date(stamp)));
+ const stamp=new Date(2026,9,23,0,30).toISOString();
+ assert.equal(localRecordDate(stamp),dateKey(new Date(new Date(stamp).getFullYear(), new Date(stamp).getMonth(), new Date(stamp).getDate()-1)));
  assert.equal(localRecordDate(null),'—');
 });
 

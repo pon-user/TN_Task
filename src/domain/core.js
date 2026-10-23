@@ -4,6 +4,14 @@ export const WIN_TIERS=[1,5,10,20,30,50,100,150,200,300,400,500,750,1000];
 export const DAMAGE_TIERS=[1,5,10,20,30,50,100,200,300,500,750,1000,1500,2000,3000,4000,5000,7500,10000];
 export const STORAGE_KEY='pon_task_v1_snapshot';
 export const dateKey=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+// The achievement day runs 04:00 through 03:59:59 local device time.
+// dateKey() is still for calendar dates; battle and XP share the same 04:00 cutoff.
+export const LOGICAL_DAY_START_HOUR=4;
+export const logicalDateKey=(when=new Date())=>{
+  const local=new Date(when);
+  if(local.getHours()<LOGICAL_DAY_START_HOUR)local.setDate(local.getDate()-1);
+  return dateKey(local);
+};
 export const addDays=(key,n)=>{const [y,m,d]=key.split('-').map(Number);return dateKey(new Date(y,m-1,d+n));};
 export const guardMax=(lv)=>{if(!Number.isInteger(lv)||lv<1)throw Error('invalid level');return 1+[5,15,30,50].filter(x=>lv>=x).length;};
 export const isDue=(t,key)=>[t.plannedDate,t.dueDate].some(x=>x&&x<=key);
@@ -58,7 +66,7 @@ function baseReward(state,key,id){
 export function completeTask(state,id,now=new Date()){
  const task=state.tasks.find(x=>x.id===id);
  if(!task||task.status==='done'||task.deletedAt)throw Error('完了できないタスクです');
- const key=dateKey(now),stamp=stampNow(now),past=state.xpEvents.find(e=>e.sourceId===id);
+ const key=logicalDateKey(now),stamp=stampNow(now),past=state.xpEvents.find(e=>e.sourceId===id);
  let xpEvents=state.xpEvents;
  if(!past)xpEvents=[...xpEvents,{sourceId:id,earnedDate:key,completedAt:stamp,basePaid:baseReward(state,key,id),plannedDateAtCompletion:task.plannedDate,dueDateAtCompletion:task.dueDate,reverted:false}];
  else if(past.reverted&&past.earnedDate===key)xpEvents=xpEvents.map(e=>e.sourceId===id?{...e,reverted:false}:e);
@@ -76,18 +84,43 @@ export function deleteTask(state,id){
  if(t.status==='done'||state.xpEvents.some(e=>e.sourceId===id))throw Error('一度完了したタスクは削除できません');
  return {...state,revision:state.revision+1,tasks:state.tasks.map(x=>x.id===id?{...x,deletedAt:new Date().toISOString()}:x)};
 }
+// The previous achievement day closes at 04:00 and its battle becomes available immediately.
+export const MORNING_BATTLE_HOUR=LOGICAL_DAY_START_HOUR;
+export function battleWindowForDate(battleDate){
+ const [year,month,day]=battleDate.split('-').map(Number);
+ return {
+  targetDate:addDays(battleDate,-1),
+  start:new Date(year,month-1,day-1,LOGICAL_DAY_START_HOUR),
+  end:new Date(year,month-1,day,LOGICAL_DAY_START_HOUR),
+ };
+}
 export function evaluateMorning(state,now=new Date(),random=Math.random){
  const battleDate=dateKey(now);
- if(now.getHours()<6||state.battleRecords.some(b=>b.battleDate===battleDate))return null;
- const targetDate=addDays(battleDate,-1),start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-1,6),end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),6);
+ if(now.getHours()<MORNING_BATTLE_HOUR||state.battleRecords.some(b=>b.battleDate===battleDate))return null;
+ const {targetDate,start:standardStart,end}=battleWindowForDate(battleDate);
+ // On the first day after upgrading from the old 06:00 boundary, exclude the
+ // hours already assessed in the previous persisted battle. Do not rewrite history.
+ const previousWindowEnds=(state.battleRecords||[])
+  .filter(b=>b.battleDate<battleDate&&typeof b.windowEnd==='string')
+  .map(b=>new Date(b.windowEnd).getTime())
+  .filter(ms=>Number.isFinite(ms)&&ms>standardStart.getTime()&&ms<end.getTime());
+ const start=previousWindowEnds.length?new Date(Math.max(standardStart.getTime(),...previousWindowEnds)):standardStart;
  const active=state.xpEvents.filter(e=>!e.reverted&&new Date(e.completedAt)>=start&&new Date(e.completedAt)<end);
  const unique=[...new Map(active.map(e=>[e.sourceId,e])).values()];
  const F=unique.filter(e=>isAdvance({plannedDate:e.plannedDateAtCompletion,dueDate:e.dueDateAtCompletion},targetDate)).length,C=unique.length-F;
- const R=state.tasks.filter(t=>!t.deletedAt&&t.status==='open'&&isDue(t,targetDate)).length+pendingOccurrences(state,targetDate).length;
+ // Evaluate unfinished items at the cutoff, even when the user opens the app later.
+ const openAtCutoff=state.tasks.filter(t=>!t.deletedAt&&(!t.createdAt||new Date(t.createdAt)<end)&&isDue(t,targetDate)&&
+   (t.status==='open'||(t.status==='done'&&t.completedAt&&new Date(t.completedAt)>=end))).length;
+ const atCutoff={...state,
+   recurrenceRules:(state.recurrenceRules||[]).filter(r=>!r.createdAt||new Date(r.createdAt)<end),
+   occurrenceEvents:(state.occurrenceEvents||[]).filter(e=>!e.occurredAt||new Date(e.occurredAt)<end),
+ };
+ const R=openAtCutoff+pendingOccurrences(atCutoff,targetDate).length;
  const eligibleXP=state.xpEvents.filter(e=>!e.reverted&&new Date(e.completedAt)<end);
  const level=levelFromXP(totalXP(eligibleXP));
  return {battleDate,targetDate,windowStart:start.toISOString(),windowEnd:end.toISOString(),...buildBattle(C,R,F,level),enemyId:pickEnemy(random),levelAtBattle:level,createdAt:stampNow(now)};
 }
+
 export function stats(records){
  const ordered=[...records].sort((a,b)=>a.battleDate.localeCompare(b.battleDate));
  const battles=ordered.filter(b=>b.enemyMaxHp>0),wins=battles.filter(b=>b.exterminated).length;
