@@ -1,0 +1,21 @@
+{
+  "name": "tanu-task",
+  "version": "0.8.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "test": "node --test",
+    "predev": "node scripts/generate-app-icons.mjs",
+    "prebuild": "node scripts/generate-app-icons.mjs"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0",
+    "sharp": "^0.34.0"
+  }
+}

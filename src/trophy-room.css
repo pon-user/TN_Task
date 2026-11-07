@@ -1,0 +1,107 @@
+/* Independent 3x3 trophy room. PNGs remain optional until public assets are staged. */
+.trophy-room{margin:22px 0 30px;color:var(--text)}
+.trophy-room-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.trophy-room-heading h3{font-size:21px;margin:0}
+.trophy-room-heading strong{padding:7px 11px;border-radius:12px;background:var(--mint-soft)}
+.trophy-room-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:12px}
+.trophy-room-tabs button{min-height:44px;border:1px solid var(--border);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700}
+.trophy-room-tabs button.selected{border-color:var(--mint);background:var(--mint-soft)}
+.trophy-room-scene{position:relative;overflow:hidden;isolation:isolate;border:7px solid #87532e;border-radius:20px;background:linear-gradient(110deg,#38251b,#70472d 50%,#39251b);box-shadow:inset 0 0 0 3px #b28a57,0 10px 25px #0003}
+.trophy-room-background{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;z-index:-1}
+.trophy-room-content{padding:12px 8px 16px}
+.trophy-room-header{position:relative;display:grid;place-items:center;min-height:65px;margin:0 0 14px}
+.trophy-room-header-art{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.trophy-room-header-text{position:relative;display:flex;align-items:center;flex-direction:column;padding:7px 18px;min-width:120px;max-width:82%;border-radius:8px;background:#6b4429dd;color:#fff5d7;text-shadow:0 1px 3px #000b}
+.trophy-room-header-text b{font-size:18px}.trophy-room-header-text small{font-size:10px}
+.trophy-room-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(138px,auto));gap:10px 4px}
+.trophy-room-slot,.trophy-room-empty{min-width:0;min-height:138px}
+.trophy-room-slot{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;padding:5px 1px;border:0;border-radius:8px;background:linear-gradient(#39261938,#26170c48);color:#fff1d7;cursor:pointer}
+.trophy-room-slot:focus-visible{outline:3px solid #ffe8a0;outline-offset:1px}
+.trophy-room-object{position:relative;display:flex;align-items:flex-end;justify-content:center;flex:1;min-height:83px;width:100%}
+.trophy-room-trophy{display:block;width:100%;max-width:95px;height:86px;object-fit:contain;filter:drop-shadow(0 3px 2px #0008)}
+.trophy-room-slot.locked .trophy-room-trophy{filter:grayscale(1) brightness(.35);opacity:.68}
+.trophy-room-lock{position:absolute;right:4px;bottom:4px;font-size:13px;filter:grayscale(.8)}
+.trophy-room-name{position:relative;display:grid;place-items:center;width:100%;min-height:33px;padding:3px 2px;border-radius:6px;background:#d8b78a;color:#302014}
+.trophy-room-name.no-art{border:1px solid #d8b78a}
+.trophy-room-name-art{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
+.trophy-room-name>span{position:relative;z-index:1;max-width:94%;overflow-wrap:anywhere;text-align:center;font-size:10px;font-weight:800;line-height:1.15;text-shadow:0 1px #fff7}
+.trophy-room-state{font-size:9px;font-weight:700;text-shadow:0 1px 2px #000}
+.trophy-room-pages{display:flex;justify-content:center;align-items:center;gap:15px;margin-top:12px}
+.trophy-room-pages button,.trophy-room-detail button{min-height:40px;padding:7px 14px;border:1px solid var(--border);border-radius:9px;background:var(--panel);color:var(--text)}
+.trophy-room-pages button:disabled{opacity:.35}
+.trophy-room-detail{margin-top:12px;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--panel)}
+.trophy-room-detail>div{display:flex;justify-content:space-between;gap:12px}
+.trophy-room-detail p{font-size:13px}
+@media(max-width:390px){.trophy-room-content{padding:10px 4px}.trophy-room-grid{gap:8px 2px;grid-template-rows:repeat(3,minmax(120px,auto))}.trophy-room-slot,.trophy-room-empty{min-height:120px}.trophy-room-trophy{height:72px}.trophy-room-name>span{font-size:9px}}
+
+/* v0.9 alignment: use one common column axis for the stand, trophy and plaque.
+   The art assets may have asymmetric transparent margins; optical correction is
+   handled by the canvas-centering component rather than arbitrary CSS offsets. */
+.trophy-room-grid{column-gap:0;row-gap:0;grid-template-columns:repeat(3,minmax(0,1fr));justify-items:stretch}
+.trophy-room-slot{box-sizing:border-box;position:relative;width:100%;padding-inline:0;gap:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 34px 15px;justify-items:center;align-items:center;background:transparent}
+.trophy-room-object{box-sizing:border-box;width:100%;min-width:0;min-height:0;height:100%;display:grid;place-items:center;justify-self:center;align-self:center}
+.trophy-room-trophy{width:100%;max-width:94px;height:100%;max-height:96px;object-fit:contain;object-position:center}
+.trophy-room-name{box-sizing:border-box;width:94%;max-width:114px;height:34px;min-height:34px;margin:0 auto;justify-self:center;align-self:center;display:grid;place-items:center;padding:0 4px}
+.trophy-room-name-art{inset:0;object-fit:fill}
+.trophy-room-name>span{width:100%;max-width:100%;text-align:center}
+.trophy-room-state{justify-self:center;align-self:center;text-align:center}
+@media(max-width:390px){
+ .trophy-room-grid{column-gap:0;row-gap:0}
+ .trophy-room-slot{padding:0;grid-template-rows:minmax(0,1fr) 29px 15px}
+ .trophy-room-trophy{max-width:92px;max-height:85px}
+ .trophy-room-name{width:96%;height:29px;min-height:29px}
+}
+
+/* Artwork-anchored layout v1.0. Coordinate system: original 1199x1312 PNG.
+   Slot coordinates refer to actual pedestal centers, NOT CSS grid tracks.
+   Keep scene's native aspect ratio so the background and overlays scale together. */
+.trophy-room-scene{aspect-ratio:1199/1312;height:auto;min-height:0;border-width:0;border-radius:12px;background:#39251b}
+.trophy-room-background{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;z-index:0}
+.trophy-room-content{position:absolute;inset:0;padding:0}
+.trophy-room-header{position:absolute;top:6%;left:27%;width:46%;height:12%;min-height:0;margin:0;z-index:2}
+.trophy-room-header-art{object-fit:contain}
+.trophy-room-header-text{padding:3px 7px;min-width:0;max-width:95%;background:#6b4429b8}
+.trophy-room-header-text b{font-size:clamp(12px,3.8vw,20px)}
+.trophy-room-header-text small{font-size:clamp(8px,2.1vw,11px)}
+.trophy-room-grid{display:contents}
+.trophy-room-slot,.trophy-room-empty{position:absolute;min-width:0;min-height:0}
+.trophy-room-slot{left:var(--slot-x);top:calc(var(--slot-y) - 17%);transform:translateX(-50%);width:27%;height:24%;display:grid;grid-template-columns:1fr;grid-template-rows:70% 20% 10%;padding:0;gap:0;border:0;border-radius:0;background:transparent;justify-items:center;align-items:center;overflow:visible;z-index:2}
+.trophy-room-object{width:100%;height:100%;min-height:0;display:grid;place-items:end center;align-self:stretch}
+.trophy-room-trophy{width:70%;height:100%;max-width:none;max-height:none;object-fit:contain;object-position:center bottom}
+.trophy-room-lock{right:8%;bottom:0;font-size:clamp(9px,2vw,14px)}
+.trophy-room-name{box-sizing:border-box;width:92%;max-width:none;height:100%;min-height:0;margin:0;justify-self:center;align-self:center;padding:0 4px;background:transparent}
+.trophy-room-name-art{object-fit:fill}
+.trophy-room-name>span{font-size:clamp(7px,2.15vw,12px);line-height:1.1;white-space:normal;overflow-wrap:anywhere}
+.trophy-room-state{font-size:clamp(7px,1.8vw,10px);align-self:start;color:#fff6dd;text-shadow:0 1px 3px #000,0 0 4px #000}
+.trophy-room-empty{display:none}
+@media(max-width:390px){
+ .trophy-room-content{padding:0}
+ .trophy-room-grid{display:contents}
+ .trophy-room-slot{padding:0;grid-template-rows:70% 20% 10%}
+ .trophy-room-trophy{width:70%;height:100%;max-width:none;max-height:none}
+ .trophy-room-name{width:92%;height:100%;min-height:0}
+ .trophy-room-name>span{font-size:clamp(7px,2.15vw,10px)}
+}
+
+/* v1.1 optical correction from iPhone screenshot: 3 pedestal columns at
+   21.8/49.6/77.2%; trophy must fit ON the green stand, not fill the niche. */
+.trophy-room-slot{
+ top:calc(var(--slot-y) - 18%);
+ height:24%;
+ grid-template-rows:78% 15% 7%;
+}
+.trophy-room-trophy{
+ width:47%;
+ height:68%;
+ max-width:none;
+ max-height:none;
+ object-fit:contain;
+ object-position:center bottom;
+}
+.trophy-room-name{width:86%;height:100%;min-height:0}
+.trophy-room-state{line-height:1;white-space:nowrap}
+@media(max-width:390px){
+ .trophy-room-slot{grid-template-rows:78% 15% 7%}
+ .trophy-room-trophy{width:47%;height:68%;max-width:none;max-height:none}
+ .trophy-room-name{width:86%;height:100%;min-height:0}
+}

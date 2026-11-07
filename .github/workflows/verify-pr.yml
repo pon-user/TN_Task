@@ -1,0 +1,63 @@
+name: Pull request verification
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feat/contextual-tanuki-sprites]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run tests
+        run: npm test
+      - name: Build production bundle
+        run: npm run build
+      - name: Verify generated icons and original backups
+        run: node scripts/verify-app-icons.mjs
+      - name: Verify original icon restoration and switch back to injured
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/generate-app-icons.mjs --mode=original
+          for name in favicon-32.png apple-touch-icon.png icon-192.png icon-512.png; do
+            cmp "public/icons/$name" "public/icons/previous/$name"
+          done
+          node scripts/generate-app-icons.mjs --mode=injured
+      - name: Verify 36 tanuki PNGs in production output
+        shell: bash
+        run: |
+          set -euo pipefail
+          count=$(find dist/sprites/tanu -maxdepth 1 -type f -name 'tanuki_*.png' | wc -l)
+          test "$count" -eq 36 || { echo "Expected 36 tanuki variants, got $count"; exit 1; }
+          test -s dist/sprites/tanu/tanuki_defeated.png
+      - name: Install headless browser for visual smoke test
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify mobile page renders tanuki and capture screenshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run dev -- --host 127.0.0.1 --port 4173 > /tmp/vite.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          node scripts/verify-tanuki-browser.mjs
+      - name: Upload mobile screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tanuki-mobile-screenshot
+          path: artifacts/screenshots/
+          if-no-files-found: ignore

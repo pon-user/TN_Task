@@ -1,0 +1,17 @@
+.tanu-page-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tanu-page-title > div { min-width: 0; }
+.home-header-tanu { flex: none; width: 48px; height: 48px; object-fit: contain; }
+.task-search-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.task-search-tools input { flex: 1 1 180px; min-width: 0; min-height: 44px; padding: 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--input); color: var(--text); font-size: 16px; }
+.completed-filter { display: flex; align-items: center; gap: 7px; font-size: 12px; white-space: nowrap; }
+.completed-filter input { width: 18px; height: 18px; accent-color: var(--mint); }
+
+/* Compact date + Tanu greeting: keep the task list high on small screens. */
+.home-greeting{display:flex;flex-direction:column;gap:8px;padding:12px 14px;margin-bottom:14px;border:1px solid var(--border);border-radius:16px;background:var(--panel)}
+.home-greeting .home-date-head{display:flex;align-items:center;gap:12px;margin:0;padding:0;min-height:52px}
+.home-greeting .home-date-head h1{margin:2px 0 0;line-height:1.25}
+.home-greeting .home-header-tanu{width:48px;height:48px;flex:none}
+.home-tanu-comment{display:flex;align-items:flex-start;gap:8px;margin:0;padding:8px 10px;border-radius:10px;background:var(--mint-soft);color:var(--text);font-size:13px;line-height:1.45}
+.home-tanu-comment svg{flex:none;margin-top:1px;color:var(--mint)}
+.home-tanu-comment span{min-width:0;overflow-wrap:anywhere}
+@media(max-width:390px){.home-greeting{padding:10px 12px}.home-tanu-comment{font-size:12px}}

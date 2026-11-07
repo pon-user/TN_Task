@@ -1,0 +1,32 @@
+name: Verify trophy room
+# Optional visual regression check. Run manually when reviewing trophy changes.
+# Main branch deployment already runs npm tests and build.
+on:
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - run: npm run build
+      - name: Prepare preview browser
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Capture mobile screenshots
+        run: |
+          npm run dev -- --host 127.0.0.1 --port 4173 > /tmp/trophy-vite.log 2>&1 &
+          sleep 5
+          node scripts/trophy-preview.mjs
+      - name: Upload review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trophy-room-mobile-review
+          path: review-screenshots/
+          if-no-files-found: warn
